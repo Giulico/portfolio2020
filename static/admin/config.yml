@@ -1,0 +1,28 @@
+backend:
+  name: git-gateway
+  branch: develop
+
+media_folder: static/img
+public_folder: /img
+
+collections:
+  - name: 'pages'
+    label: 'Pages'
+    files:
+      - file: 'src/pages/homepage/index.md'
+        label: 'Homepage'
+        name: 'index'
+        fields:
+          - {
+              label: 'Template Key',
+              name: 'templateKey',
+              widget: 'hidden',
+              default: 'index-page',
+            }
+          - { label: 'Title', name: 'title', widget: 'string' }
+          - { label: 'Hero', name: 'hero', widget: 'image' }
+          - { label: 'Video', name: 'video', widget: 'file' }
+          - { label: 'Image 1', name: 'image1', widget: 'image' }
+          - { label: 'Image 2', name: 'image2', widget: 'image' }
+          - { label: 'Image 3', name: 'image3', widget: 'image' }
+          - { label: 'Footer', name: 'footer', widget: 'image' }

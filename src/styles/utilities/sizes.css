@@ -1,0 +1,50 @@
+.u-pt--1 {
+  padding-top: 1rem;
+}
+
+.u-py--1 {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.u-mt--2 {
+  margin-top: 2rem;
+}
+
+.u-mb--6 {
+  margin-bottom: 6rem;
+}
+
+.u-ml--2 {
+  margin-left: 2rem;
+}
+
+.u-mx--2 {
+  margin-right: 2rem;
+  margin-left: 2rem;
+}
+
+.u-ml-desktop--4 {
+  @media (--desktop) {
+    margin-left: 4rem;
+  }
+}
+
+.u-mx-desktop--4 {
+  @media (--desktop) {
+    margin-right: 4rem;
+    margin-left: 4rem;
+  }
+}
+
+.u-mt-tablet--2 {
+  @media (--tablet) {
+    margin-top: 2rem;
+  }
+}
+
+.u-mt-desktop--4 {
+  @media (--desktop) {
+    margin-top: 4rem;
+  }
+}

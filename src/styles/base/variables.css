@@ -1,0 +1,35 @@
+:root {
+  /* SPACES */
+  --space: 8px;
+
+  /* COLORS */
+  --black: #000000;
+  --white: #ffffff;
+  --bg-color: #191919;
+  --text-color: #ffffff;
+  --primary: #fed34a;
+  --gray: #7e7e7e;
+
+  /* TYPOGRAPHY */
+  --font-family-base: ff-meta-serif-web-pro, sans-serif;
+  --font-weight-base: 300;
+
+  /* DEPTH */
+  --z-index-menu: 100;
+  --z-index-base: 1;
+  --z-index-behind: -1;
+
+  /* EASING */
+  --expo-ease-in: cubic-bezier(0.92, 0.02, 0.83, 0.21);
+  --expo-ease-out: cubic-bezier(0.15, 0.94, 0.21, 0.98);
+  --expo-ease-in-out: cubic-bezier(0.86, 0.01, 0.14, 1);
+
+  --power3-ease-in: cubic-bezier(0.74, 0, 0.77, 0.25);
+  --power3-ease-out: cubic-bezier(0.23, 1, 0.38, 1);
+  --power3-ease-in-out: cubic-bezier(0.69, 0, 0.27, 1);
+
+  /* BURGER */
+  --burger-time: 0.7s;
+  --burger-ease: cubic-bezier(0.54, -0.81, 0.57, 0.57);
+  --burger-color: #ffffff;
+}
