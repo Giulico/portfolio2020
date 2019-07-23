@@ -2,7 +2,7 @@ import React from 'react'
 import { navigate } from 'gatsby'
 import { Container, Text, depth } from '../../constants'
 import { connect } from 'redhooks'
-import { TweenLite, TimelineLite } from 'gsap'
+import { TweenLite, TimelineLite, Power3 } from 'gsap'
 import FontFaceObserver from 'fontfaceobserver'
 
 class Menu extends React.Component {
@@ -260,12 +260,14 @@ class Menu extends React.Component {
         // era il current?
         if (this.isCurrent(index, prevIndex)) {
           const tl = new TimelineLite()
-          tl.to(text.position, 0.05, {
-            x: this.leftPosition
+          tl.to(text.position, 0.5, {
+            x: this.leftPosition,
+            ease: Power3.easeInOut
           })
             .add(
               TweenLite.to(text.style, 0.5, {
-                fontSize: this.fontSize
+                fontSize: this.fontSize,
+                ease: Power3.easeInOut
               }),
               0
             )

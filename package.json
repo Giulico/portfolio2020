@@ -47,13 +47,13 @@
   "main": "n/a",
   "scripts": {
     "clean": "rimraf .cache public",
-    "start:app": "npm run develop",
+    "start:app": "yarn run develop",
     "start:lambda": "netlify-lambda serve src/lambda",
-    "start": "run-p start:**",
-    "build:app": "npm run clean && gatsby build",
+    "start": "run-p start:app",
+    "build:app": "yarn run clean && gatsby build",
     "build:lambda": "netlify-lambda build src/lambda",
-    "build": "run-p build:**",
-    "develop": "npm run clean && gatsby develop",
+    "build": "run-p build:app",
+    "develop": "yarn run clean && gatsby develop",
     "serve": "gatsby serve",
     "format": "prettier --trailing-comma es5 --no-semi --single-quote --write \"{gatsby-*.js,src/**/*.js}\"",
     "test": "echo \"Error: no test specified\" && exit 1"
