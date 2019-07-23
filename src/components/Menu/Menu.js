@@ -44,7 +44,7 @@ class Menu extends React.Component {
 
     // Route changed
     if (prevLocation.pathname !== currLocation.pathname) {
-      this.onRouteChanged()
+      this.changeItemsOrder()
     }
   }
 
@@ -139,19 +139,19 @@ class Menu extends React.Component {
 
   isCurrent = (index, currIndex = this.currIndex) => currIndex === index
 
-  isNext = index => {
+  isNext = (index, currIndex = this.currIndex) => {
     const { menuLinks } = this.props
     return (
-      (this.currIndex === menuLinks.length - 1 && index === 0) ||
-      index === this.currIndex + 1
+      (currIndex === menuLinks.length - 1 && index === 0) ||
+      index === currIndex + 1
     )
   }
 
-  isPrev = index => {
+  isPrev = (index, currIndex = this.currIndex) => {
     const { menuLinks } = this.props
     return (
-      (this.currIndex === 0 && index === menuLinks.length - 1) ||
-      index === this.currIndex - 1
+      (currIndex === 0 && index === menuLinks.length - 1) ||
+      index === currIndex - 1
     )
   }
 
@@ -167,9 +167,9 @@ class Menu extends React.Component {
     const target = e.currentTarget
     const index = menuLinks.findIndex(item => item.name === target.text)
     if (this.isNext(index)) {
-      this.onMouseoverBottomItem(target)
+      this.mouseoverBottomAnimation(target)
     } else if (this.isPrev(index)) {
-      this.onMouseoverTopItem(target)
+      this.mouseoverTopAnimation(target)
     }
   }
 
@@ -181,37 +181,37 @@ class Menu extends React.Component {
     const target = e.currentTarget
     const index = menuLinks.findIndex(item => item.name === target.text)
     if (this.isNext(index)) {
-      this.onMouseoutBottomItem(target)
+      this.mouseoutBottomAnimation(target)
     } else if (this.isPrev(index)) {
-      this.onMouseoutTopItem(target)
+      this.mouseoutTopAnimation(target)
     }
   }
 
-  onMouseoverBottomItem = target => {
+  mouseoverBottomAnimation = target => {
     TweenLite.to(target, 0.5, {
       y: this.bottomPosition - this.fontSize / 2
     })
   }
 
-  onMouseoutBottomItem = target => {
+  mouseoutBottomAnimation = target => {
     TweenLite.to(target, 0.5, {
       y: this.bottomPosition
     })
   }
 
-  onMouseoverTopItem = target => {
+  mouseoverTopAnimation = target => {
     TweenLite.to(target, 0.5, {
       y: this.topPosition + this.fontSize / 2
     })
   }
 
-  onMouseoutTopItem = target => {
+  mouseoutTopAnimation = target => {
     TweenLite.to(target, 0.5, {
       y: this.topPosition
     })
   }
 
-  onRouteChanged = () => {
+  changeItemsOrder = () => {
     // Add new event listeners after 1 second
     const prevIndex = this.currIndex
     this.currIndex = this.findCurrentIndex()
