@@ -10,7 +10,7 @@ class Canvas extends PureComponent {
     const { app, dispatch } = this.props
     const { width, height } = app
 
-    this.application = new Application({ backgroundColor: 0x1099bb })
+    this.application = new Application({ backgroundColor: 0xffffff })
     this.application.stage.sortableChildren = true
     const { view } = this.application
     view.width = width

@@ -1,9 +1,10 @@
 import React from 'react'
 import { navigate } from 'gatsby'
-import { Container, Text, depth } from '../../constants'
+import { Container, Text, Graphics, depth } from '../../constants'
 import { connect } from 'redhooks'
-import { TweenLite, TimelineLite, Power3 } from 'gsap'
+import { TweenLite, TimelineLite, Power3, Expo } from 'gsap'
 import FontFaceObserver from 'fontfaceobserver'
+import { Ticker } from 'pixi.js'
 
 class Menu extends React.Component {
   state = {
@@ -34,8 +35,18 @@ class Menu extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { canvas: prevCanvas, location: prevLocation } = prevProps
-    const { canvas: currCanvas, location: currLocation } = this.props
+    const {
+      app: prevApp,
+      canvas: prevCanvas,
+      menu: prevMenu,
+      location: prevLocation
+    } = prevProps
+    const {
+      app: currApp,
+      canvas: currCanvas,
+      menu: currMenu,
+      location: currLocation
+    } = this.props
 
     // When application has been published
     if (!prevCanvas.application && currCanvas.application) {
@@ -46,19 +57,54 @@ class Menu extends React.Component {
     if (prevLocation.pathname !== currLocation.pathname) {
       this.changeItemsOrder()
     }
+
+    // Menu Burger has been triggered
+    if (prevMenu.isOpen !== currMenu.isOpen) {
+      if (currMenu.isOpen) {
+        this.openMenu()
+        this.selectedItem = 1 // 0 based, so the middle item
+        window.addEventListener('mousemove', this.handlePointerDrag, false)
+      } else {
+        this.closeMenu()
+        window.removeEventListener('mousemove', this.handlePointerDrag)
+      }
+    }
+
+    // Debounced events
+    if (this.debounceTimer) {
+      window.clearTimeout(this.debounceTimer)
+    }
+    this.debounceTimer = window.setTimeout(() => {
+      // If App Resize
+      if (
+        currApp.width !== prevApp.width ||
+        currApp.height !== prevApp.height
+      ) {
+        this.handleResize()
+      }
+    }, 300)
   }
+
+  background = {
+    alpha: 0
+  }
+
+  indicator = {
+    alpha: 0,
+    bgColor: 0xcfcfcf,
+    color: 0x83ccf2,
+    y: this.middlePosition - this.fontSize / 2
+  }
+
+  fontSizeMoltiplicator = 1.75
 
   get fontSize() {
     return Math.round(window.innerHeight / 7)
   }
 
-  get middleAlpha() {
-    return 0.3
-  }
+  middleAlpha = 0.3
 
-  get topPosition() {
-    return 0
-  }
+  topPosition = 0
 
   get middlePosition() {
     const { app } = this.props
@@ -81,7 +127,7 @@ class Menu extends React.Component {
   get leftMiddlePosition() {
     const { app } = this.props
     const { width } = app
-    return width / 1.25
+    return width / 1.4
   }
 
   render() {
@@ -90,13 +136,21 @@ class Menu extends React.Component {
 
   setup = () => {
     const { canvas, menuLinks } = this.props
+
     // Create the container and add the Text
     this.container = new Container()
     this.container.zIndex = depth.menu
+
+    this.menuBackground = new Graphics()
+    this.container.addChild(this.menuBackground)
+
     menuLinks.forEach((menuLink, index) => {
       this.addText(menuLink, index)
     })
     canvas.application.stage.addChild(this.container)
+    // Ticker
+    this.ticker = new Ticker()
+    this.ticker.add(this.drawIndicators)
   }
 
   findCurrentIndex() {
@@ -105,36 +159,46 @@ class Menu extends React.Component {
   }
 
   addText(menuLink, index) {
-    const item = this.items[index]
+    const { app } = this.props
+    const { width, height } = app
     const isCurrent = this.isCurrent(index)
 
-    item.text = new Text(menuLink.name, {
+    this.items[index].text = new Text(menuLink.name, {
       fontFamily: 'Arial',
       fontSize: this.fontSize,
-      fill: 0xc5c5c5,
+      fill: 0xcfcfcf,
       align: 'left'
     })
-    const text = item.text
+    this.items[index].indicator = new Graphics()
+
+    const text = this.items[index].text
+    const indicator = this.items[index].indicator
+    const { bgColor, color, y, alpha } = this.indicator
+    indicator
+      .clear()
+      // Transparent space
+      .beginFill(bgColor, 1)
+      .drawRect(0, 0, width, height)
+      .endFill()
+      // White space
+      .beginFill(color, alpha)
+      .drawRect(0, y, width, this.fontSize)
+
+    indicator.mask = text
+
     text.anchor.set(0, 0.5)
     text.interactive = true
     text.buttonMode = !isCurrent
 
     // Initial position
-    if (isCurrent) {
-      text.position.set(this.leftMiddlePosition, this.middlePosition)
-      text.style.fontSize = this.fontSize * 1.5
-      text.alpha = this.middleAlpha
-    } else if (this.isNext(index)) {
-      text.position.set(this.leftPosition, this.bottomPosition)
-    } else if (this.isPrev(index)) {
-      text.position.set(this.leftPosition, this.topPosition)
-    } else {
-      text.visible = false
-    }
+    this.setTextPosition(text, index)
+
+    this.container.addChild(text, indicator)
+
+    // Events
     text.on('click', this.navigate(menuLink.link))
     text.on('mouseover', this.handleMouseover)
     text.on('mouseout', this.handleMouseout)
-    this.container.addChild(text)
   }
 
   isCurrent = (index, currIndex = this.currIndex) => currIndex === index
@@ -189,25 +253,29 @@ class Menu extends React.Component {
 
   mouseoverBottomAnimation = target => {
     TweenLite.to(target, 0.5, {
-      y: this.bottomPosition - this.fontSize / 2
+      y: this.bottomPosition - this.fontSize / 2,
+      ease: Power3.easeOut
     })
   }
 
   mouseoutBottomAnimation = target => {
     TweenLite.to(target, 0.5, {
-      y: this.bottomPosition
+      y: this.bottomPosition,
+      ease: Power3.easeOut
     })
   }
 
   mouseoverTopAnimation = target => {
     TweenLite.to(target, 0.5, {
-      y: this.topPosition + this.fontSize / 2
+      y: this.topPosition + this.fontSize / 2,
+      ease: Power3.easeOut
     })
   }
 
   mouseoutTopAnimation = target => {
     TweenLite.to(target, 0.5, {
-      y: this.topPosition
+      y: this.topPosition,
+      ease: Power3.easeOut
     })
   }
 
@@ -241,7 +309,7 @@ class Menu extends React.Component {
           y: this.middlePosition
         })
           .to(text.style, 0.5, {
-            fontSize: this.fontSize * 1.5
+            fontSize: this.fontSize * this.fontSizeMoltiplicator
           })
           .add(
             TweenLite.to(text.position, 0.5, {
@@ -332,10 +400,242 @@ class Menu extends React.Component {
       }
     })
   }
+
+  openMenu() {
+    // set isAnimating
+    this.setState({ isAnimating: true })
+
+    // Start drawing the indicators
+    this.ticker.start()
+    TweenLite.to([this.indicator, this.background], 0.5, {
+      alpha: 1
+    })
+
+    // Align the menu items
+    this.items.forEach((item, index) => {
+      const text = item.text
+      if (this.isCurrent(index)) {
+        TweenLite.to(text, 0.5, {
+          alpha: 1
+        })
+        TweenLite.to(text.position, 0.5, {
+          x: this.leftPosition
+        })
+        TweenLite.to(text.style, 0.3, {
+          fontSize: this.fontSize
+        })
+      } else if (this.isPrev(index)) {
+        TweenLite.to(text.position, 0.5, {
+          y: this.middlePosition - this.fontSize
+        })
+      } else if (this.isNext(index)) {
+        TweenLite.to(text.position, 0.5, {
+          y: this.middlePosition + this.fontSize
+        })
+      }
+    })
+  }
+
+  closeMenu() {
+    const fontSize = this.fontSize
+    // Indicator
+    TweenLite.to(this.indicator, 0.5, {
+      alpha: 0
+    })
+    TweenLite.set(this.indicator, {
+      y: this.middlePosition - fontSize / 2,
+      delay: 0.5
+    })
+    // Backgroud
+    TweenLite.to(this.background, 0.5, {
+      alpha: 0
+    })
+    if (this.selectedItem !== 1) {
+      // Find the items
+      const firstItem = this.items.reduce((prev, curr) => {
+        return curr.text.y < prev.text.y ? curr : prev
+      }, this.items[0])
+      const firstItemIndex = this.items.findIndex(
+        item => item.text.text === firstItem.text.text
+      )
+      const secondItemIndex =
+        firstItemIndex + 1 > this.items.length - 1 ? 0 : firstItemIndex + 1
+
+      const thirdItemIndex =
+        secondItemIndex + 1 > this.items.length - 1 ? 0 : secondItemIndex + 1
+      const thirdItem = this.items[thirdItemIndex]
+
+      // Fist item selected
+      if (this.selectedItem === 0) {
+        const pathname = this.props.menuLinks.find(
+          menuLink => menuLink.name === firstItem.text.text
+        ).link
+        this.navigate(pathname)()
+      }
+      // Last item selected
+      if (this.selectedItem === 2) {
+        const pathname = this.props.menuLinks.find(
+          menuLink => menuLink.name === thirdItem.text.text
+        ).link
+        this.navigate(pathname)()
+      }
+    } else {
+      // Close the menu
+      this.items.forEach((item, index) => {
+        const text = item.text
+        if (this.isCurrent(index)) {
+          TweenLite.to(text, 0.5, {
+            alpha: this.middleAlpha
+          })
+          TweenLite.to(text.position, 0.5, {
+            x: this.leftMiddlePosition,
+            onComplete: () => {
+              // Stop drawing the indicator
+              this.ticker.stop()
+              this.setState({ isAnimating: false })
+            }
+          })
+          TweenLite.to(text.style, 0.5, {
+            fontSize: fontSize * this.fontSizeMoltiplicator
+          })
+        } else if (this.isPrev(index)) {
+          TweenLite.to(text.position, 0.5, {
+            y: this.topPosition
+          })
+        } else if (this.isNext(index)) {
+          TweenLite.to(text.position, 0.5, {
+            y: this.bottomPosition
+          })
+        }
+      })
+    }
+
+    // if (this.selectedItem === 0) {
+    //   const tlThirdItem = new TimelineLite()
+    //   tlThirdItem
+    //     .to(thirdItem.text, 0.5, {
+    //       y: this.bottomPosition + fontSize
+    //     })
+    //     .set(thirdItem.text, {
+    //       y: this.topPosition - fontSize
+    //     })
+    //     .to(thirdItem.text, 0.5, {
+    //       y: this.topPosition
+    //     })
+    //   TweenLite.to(secondItem.text, 0.5, {
+    //     y: this.bottomPosition,
+    //     delay: 0.1
+    //   })
+    //   const tlFirstItem = new TimelineLite({
+    //     onComplete: () => {
+    //       // const pathname = this.props.menuLinks.find(
+    //       //   menuLink => menuLink.name === firstItem.text.text
+    //       // ).link
+    //       // this.navigate(pathname)()
+    //     }
+    //   })
+    //   tlFirstItem
+    //     .to(firstItem.text, 0.5, {
+    //       y: this.middlePosition,
+    //       delay: 0.2
+    //     })
+    //     .to(firstItem.text, 0.5, {
+    //       alpha: this.middleAlpha,
+    //       x: this.leftMiddlePosition
+    //     })
+    //     .add(
+    //       TweenLite.to(firstItem.text.style, 0.5, {
+    //         fontSize: fontSize * this.fontSizeMoltiplicator
+    //       }),
+    //       0.5
+    //     )
+    // } else if (this.selectedItem === 2) {
+    //   console.log('metti l"ultima in centro')
+    // } else {
+    // Menu items
+    // }
+  }
+
+  drawIndicators = () => {
+    const { app } = this.props
+    const { width, height } = app
+    const { alpha, bgColor, color, y } = this.indicator
+    this.items.forEach((item, index) => {
+      const indicator = item.indicator
+      indicator
+        .clear()
+        // Transparent space
+        .beginFill(bgColor, 1)
+        .drawRect(0, 0, width, height)
+        .endFill()
+        // White space
+        .beginFill(color, alpha)
+        .drawRect(0, y, width, this.fontSize)
+    })
+    // Draw background
+    this.menuBackground
+      .clear()
+      .beginFill(0xffffff, this.background.alpha)
+      .drawRect(0, 0, width, height)
+      .endFill()
+  }
+
+  setTextPosition(text, index) {
+    if (this.isCurrent(index)) {
+      text.position.set(this.leftMiddlePosition, this.middlePosition)
+      text.style.fontSize = this.fontSize * this.fontSizeMoltiplicator
+      text.alpha = this.middleAlpha
+    } else if (this.isNext(index)) {
+      text.position.set(this.leftPosition, this.bottomPosition)
+      text.alpha = 1
+    } else if (this.isPrev(index)) {
+      text.position.set(this.leftPosition, this.topPosition)
+      text.alpha = 1
+    } else {
+      text.visible = false
+    }
+  }
+
+  handlePointerDrag = e => {
+    const y = e.y
+    const middlePosition = this.middlePosition
+    const fontSize = this.fontSize
+    if (y <= middlePosition - fontSize / 2 && this.selectedItem !== 0) {
+      this.selectedItem = 0
+      TweenLite.to(this.indicator, 1, {
+        y: middlePosition - fontSize * 1.5,
+        ease: Power3.easeOut
+      })
+    } else if (
+      y > middlePosition - fontSize / 2 &&
+      y <= middlePosition + fontSize / 2 &&
+      this.selectedItem !== 1
+    ) {
+      this.selectedItem = 1
+      TweenLite.to(this.indicator, 1, {
+        y: middlePosition - fontSize / 2,
+        ease: Power3.easeOut
+      })
+    } else if (y > middlePosition + fontSize / 2 && this.selectedItem !== 2) {
+      this.selectedItem = 2
+      TweenLite.to(this.indicator, 1, {
+        y: middlePosition + fontSize / 2,
+        ease: Power3.easeOut
+      })
+    }
+  }
+
+  handleResize = () => {
+    this.items.forEach((item, index) => {
+      const text = item.text
+      this.setTextPosition(text, index)
+    })
+  }
 }
 
 const mapStateToProps = state => ({
   app: state.app,
+  menu: state.menu,
   canvas: state.canvas
 })
 

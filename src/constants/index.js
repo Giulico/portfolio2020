@@ -9,6 +9,7 @@ module.exports = {
   Sprite: PIXI.Sprite,
   Text: PIXI.Text,
   Texture: PIXI.Texture,
+  Ticker: PIXI.Ticker,
   Filter: PIXI.Filter,
   filters: PIXI.filters,
   Graphics: PIXI.Graphics,

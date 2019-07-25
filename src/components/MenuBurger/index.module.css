@@ -1,0 +1,33 @@
+.root {
+  position: relative;
+  margin: 0;
+  padding: 10px 10px 10px 35px;
+  border: 0;
+  background-color: transparent;
+  outline: 0 none;
+
+  &::after,
+  &::before {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 18px;
+    height: 3px;
+    background-color: black;
+    content: '';
+    transform: translate3d(0, -4px, 0);
+  }
+
+  &::after {
+    width: 12px;
+    transform: translate3d(0, 2px, 0);
+  }
+}
+
+.label {
+  font-family: var(--font-family-base), sans-serif;
+  font-size: 1rem;
+  font-weight: var(--font-weight-base);
+  white-space: nowrap;
+  letter-spacing: 1px;
+}

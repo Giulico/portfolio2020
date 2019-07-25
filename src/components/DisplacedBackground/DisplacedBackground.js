@@ -12,8 +12,9 @@ import {
 } from '../../constants'
 
 // Imgs
-import Giulio from '../../assets/images/giulio.jpg'
-import GiulioMap from '../../assets/images/giulio-map.jpg'
+import Giulio from '../../assets/images/giulio.png'
+import GiulioMap from '../../assets/images/giulio-map.png'
+import VideoShader from './VideoShader'
 
 class DisplacedBackground extends React.Component {
   componentDidMount() {
@@ -44,7 +45,7 @@ class DisplacedBackground extends React.Component {
         currApp.width !== prevApp.width ||
         currApp.height !== prevApp.height
       ) {
-        this.doResize()
+        this.handleResize()
       }
     }, 300)
   }
@@ -70,8 +71,14 @@ class DisplacedBackground extends React.Component {
     const stage = new Container()
     stage.interactive = true
     stage.zIndex = depth.displacedBackground
+    stage.alpha = 0.5
 
     canvas.application.stage.addChild(stage)
+
+    this.coloredBG = new Graphics()
+      .beginFill(0x8bc5ff, 1)
+      .drawRect(0, 0, width * 0.7, height)
+      .endFill()
 
     const container = new Container()
 
@@ -84,9 +91,16 @@ class DisplacedBackground extends React.Component {
     displacementFilter.scale.x = 10
     displacementFilter.scale.y = 10
 
-    this.doResize()
+    this.VideoShader = new VideoShader(
+      stage,
+      canvas.application.view,
+      width,
+      height
+    )
 
-    container.addChild(this.bg)
+    this.handleResize()
+
+    container.addChild(this.coloredBG, this.bg)
 
     const onPointerMove = e => {
       const mouseOffsetX = e.data.global.x / width
@@ -99,7 +113,7 @@ class DisplacedBackground extends React.Component {
     stage.on('mousemove', onPointerMove).on('touchmove', onPointerMove)
   }
 
-  doResize = () => {
+  handleResize = () => {
     this.setBackground()
     Object.assign(this.ds, {
       x: this.bg.x,
@@ -115,7 +129,9 @@ class DisplacedBackground extends React.Component {
 
   setBackground = () => {
     const { app } = this.props
-    const { width: x, height: y } = app
+    const { width, height } = app
+    const x = width * 0.75
+    const y = height
 
     if (!this.bgContainer) {
       this.bgContainer = new Container()
