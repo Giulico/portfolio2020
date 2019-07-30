@@ -1,35 +1,142 @@
-import React, { useCallback, useEffect } from 'react'
-import { useStore } from 'redhooks'
+import React from 'react'
+import { connect } from 'redhooks'
+import cn from 'classnames'
 
 // Styles
 import style from './index.module.css'
 
-const MenuBurger = () => {
-  const { dispatch } = useStore()
-  const pointerDownHandler = useCallback(() => {
-    dispatch({ type: 'MENU_OPEN' })
-  }, [])
-  const pointerUpHandler = useCallback(() => {
-    dispatch({ type: 'MENU_CLOSE' })
-  }, [])
+class MenuBurger extends React.Component {
+  componentDidMount() {
+    window.addEventListener('mouseup', this.pointerUpHandler)
+    this.burgerRef.addEventListener('mouseenter', this.mouseEnterHandler, false)
+    this.burgerRef.addEventListener('mouseleave', this.mouseLeaveHandler, false)
+  }
 
-  useEffect(() => {
+  componentWillUnmount() {
     if (typeof window !== 'undefined') {
-      window.addEventListener('mouseup', pointerUpHandler)
+      window.removeEventListener('mouseup', this.pointerUpHandler)
+      this.burgerRef.removeEventListener('mouseenter', this.mouseEnterHandler)
+      this.burgerRef.removeEventListener('mouseleave', this.mouseLeaveHandler)
     }
+  }
 
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('mouseup', pointerUpHandler)
+  render() {
+    const { menu, cursor } = this.props
+
+    const classes = cn({
+      [style.root]: true,
+      [style.hasHover]:
+        cursor.name === 'menuBurger' || cursor.name === 'menuOpen',
+      [style.isOpen]: menu.isOpen
+    })
+
+    return (
+      <div className={classes} ref={c => (this.burgerRef = c)}>
+        <button
+          className={style.button}
+          onPointerDown={this.pointerDownHandler}
+        >
+          <span className={style.label}>Menu</span>
+        </button>
+        <div className={style.slider} ref={c => (this.sliderRef = c)} />
+      </div>
+    )
+  }
+
+  mouseEnterHandler = e => {
+    const { dispatch, cursor } = this.props
+    const rect = this.burgerRef.getBoundingClientRect()
+    if (cursor.name !== 'menuOpen') {
+      dispatch({
+        type: 'CURSOR_SET_NAME',
+        payload: {
+          name: 'menuBurger',
+          fixedPosition: {
+            x: rect.left + (rect.right - rect.left) / 2,
+            y: rect.top + (rect.bottom - rect.top) / 2,
+            width: rect.width,
+            height: rect.height
+          }
+        }
+      })
+    }
+  }
+
+  mouseLeaveHandler = e => {
+    const { dispatch, cursor } = this.props
+    // Restore cursor state only if the menu is closed
+    if (cursor.name !== 'menuOpen') {
+      dispatch({
+        type: 'CURSOR_SET_NAME',
+        payload: {
+          name: 'base'
+        }
+      })
+    }
+  }
+
+  pointerDownHandler = () => {
+    const { dispatch } = this.props
+    dispatch({ type: 'MENU_OPEN' })
+    // Set cursor state
+    const rect = this.sliderRef.getBoundingClientRect()
+    dispatch({
+      type: 'CURSOR_SET_NAME',
+      payload: {
+        name: 'menuOpen',
+        fixedPosition: {
+          x: rect.left + (rect.right - rect.left) / 2,
+          y: rect.top + (rect.bottom - rect.top) / 2,
+          width: rect.width,
+          height: rect.height
+        }
       }
-    }
-  }, [])
+    })
+  }
 
-  return (
-    <button className={style.root} onPointerDown={pointerDownHandler}>
-      <span className={style.label}>Menu</span>
-    </button>
-  )
+  pointerUpHandler = e => {
+    const { dispatch, cursor } = this.props
+    const { x, y } = e
+    const rect = this.burgerRef.getBoundingClientRect()
+
+    // Close the menu
+    dispatch({ type: 'MENU_CLOSE' })
+
+    // Set the cursor
+    // check if cursor is on the menu burger
+    if (
+      (cursor.name === 'menuOpen' || cursor.name === 'menuBurger') &&
+      x > rect.left &&
+      x < rect.right &&
+      y > rect.top &&
+      y < rect.bottom
+    ) {
+      dispatch({
+        type: 'CURSOR_SET_NAME',
+        payload: {
+          name: 'menuBurger',
+          fixedPosition: {
+            x: rect.left + (rect.right - rect.left) / 2,
+            y: rect.top + (rect.bottom - rect.top) / 2,
+            width: rect.width,
+            height: rect.height
+          }
+        }
+      })
+    } else {
+      dispatch({
+        type: 'CURSOR_SET_NAME',
+        payload: {
+          name: 'base'
+        }
+      })
+    }
+  }
 }
 
-export default MenuBurger
+const mapStateToProp = state => ({
+  menu: state.menu,
+  cursor: state.cursor
+})
+
+export default connect(mapStateToProp)(MenuBurger)

@@ -13,13 +13,27 @@ class Frame extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { canvas: prevCanvas } = prevProps
-    const { canvas: currCanvas } = this.props
+    const { app: prevApp, canvas: prevCanvas } = prevProps
+    const { app: currApp, canvas: currCanvas } = this.props
 
     // When application has been published
     if (!prevCanvas.application && currCanvas.application) {
       this.setup()
     }
+
+    // Debounced events
+    if (this.debounceTimer) {
+      window.clearTimeout(this.debounceTimer)
+    }
+    this.debounceTimer = window.setTimeout(() => {
+      // If App Resize
+      if (
+        currApp.width !== prevApp.width ||
+        currApp.height !== prevApp.height
+      ) {
+        this.handleResize()
+      }
+    }, 300)
   }
 
   render() {
@@ -27,31 +41,48 @@ class Frame extends React.Component {
   }
 
   setup() {
-    const { app, canvas } = this.props
-    const { width, height } = app
+    const { canvas } = this.props
     const container = new Container()
 
-    const topBar = new Graphics()
+    this.topBar = new Graphics()
+    this.rightBar = new Graphics()
+    this.bottomBar = new Graphics()
+    this.leftBar = new Graphics()
+
+    this.drawFrame()
+    container.zIndex = depth.displacedBackground + 1
+    container.addChild(this.topBar, this.rightBar, this.bottomBar, this.leftBar)
+    canvas.application.stage.addChild(container)
+  }
+
+  drawFrame() {
+    const { app } = this.props
+    const { width, height } = app
+
+    this.topBar
+      .clear()
       .beginFill(0xffffff, 1)
       .drawRect(0, 0, width, 40)
       .endFill()
-    const rightBar = new Graphics()
+    this.rightBar
+      .clear()
       .beginFill(0xffffff, 1)
       .drawRect(width - 40, 0, 40, height)
       .endFill()
-    const bottomBar = new Graphics()
+    this.bottomBar
+      .clear()
       .beginFill(0xffffff, 1)
       .drawRect(0, height - 40, width, 40)
       .endFill()
-    const leftBar = new Graphics()
+    this.leftBar
+      .clear()
       .beginFill(0xffffff, 1)
       .drawRect(0, 0, 40, height)
       .endFill()
+  }
 
-    container.zIndex = depth.displacedBackground + 1
-
-    container.addChild(topBar, rightBar, bottomBar, leftBar)
-    canvas.application.stage.addChild(container)
+  handleResize() {
+    this.drawFrame()
   }
 }
 

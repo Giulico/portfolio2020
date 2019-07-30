@@ -1,0 +1,44 @@
+.header {
+  position: fixed;
+  top: 30%;
+  left: 10%;
+  z-index: 10;
+  display: flex;
+  width: 25%;
+  min-width: 250px;
+  transform: translateY(-75%);
+}
+
+.brand {
+  padding: 0 40px 0 0;
+  font-weight: var(--font-weight-base-heavy);
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+
+.update {
+  display: block;
+  margin-bottom: 1rem;
+  font-size: 0.75rem;
+  transition: all 0.7s var(--power3-ease-out);
+}
+
+.hr {
+  opacity: 0.5;
+  width: 75%;
+  border: 0;
+  border-bottom: 1px solid var(--gray);
+  transform-origin: 0% 50%;
+  transition: transform 0.7s var(--power3-ease-out);
+}
+
+.menuOpen {
+  & .update {
+    opacity: 0;
+    transform: translate3d(0, -15px, 0);
+  }
+
+  & .hr {
+    transform: scale(0, 1);
+  }
+}

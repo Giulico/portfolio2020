@@ -1,10 +1,5 @@
 import React from 'react'
 
-const ProjectsPage = () => (
-  <div>
-    <h1>Projects</h1>
-    <p>The list of all projects</p>
-  </div>
-)
+const ProjectsPage = () => <span>a lot of Projects here!</span>
 
 export default ProjectsPage

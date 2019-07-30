@@ -12,10 +12,11 @@ import store from '../../store'
 
 // Components
 import App from '../App'
+import Cursor from '../Cursor'
+import Header from '../Header'
 import Canvas from '../Canvas'
 import Frame from '../Frame'
 import Menu from '../Menu'
-import MenuBurger from '../MenuBurger'
 
 const Layout = ({ children, location, pageContext }) => {
   const { title, description, menuLinks } = useSiteMetadata()
@@ -55,21 +56,11 @@ const Layout = ({ children, location, pageContext }) => {
         <meta property="og:url" content="/" />
         <meta property="og:image" content="/img/og-image.jpg" />
       </Helmet>
+      <Cursor />
       <Canvas />
       <Frame />
       <Menu menuLinks={menuLinks} location={location} />
-      <header className={style.header}>
-        <div className={style.brand}>Giulio Collesei</div>
-        <div className={style.menu}>
-          <span className={style.update}>
-            upd 25 july 2019
-            <br />
-            32 yo
-          </span>
-          <hr className={style.hr} align="left" />
-          <MenuBurger />
-        </div>
-      </header>
+      <Header />
       <main className={style.main}>
         <App>{children}</App>
       </main>

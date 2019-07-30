@@ -1,10 +1,12 @@
 import React from 'react'
-import { navigate } from 'gatsby'
-import { Container, Text, Graphics, depth } from '../../constants'
 import { connect } from 'redhooks'
-import { TweenLite, TimelineLite, Power3, Expo } from 'gsap'
+import { TweenLite, TimelineLite, Power3 } from 'gsap'
 import FontFaceObserver from 'fontfaceobserver'
-import { Ticker } from 'pixi.js'
+import { Container, Ticker, Text, Graphics, depth } from '../../constants'
+import { Consumer } from 'gatsby-plugin-transition-link/context/createTransitionContext'
+
+// Utils
+import { navigate } from '../../utils/page-transition'
 
 class Menu extends React.Component {
   state = {
@@ -20,7 +22,7 @@ class Menu extends React.Component {
       this.currIndex = this.findCurrentIndex()
       this.setup()
       // load font family
-      const font = new FontFaceObserver('ff-meta-serif-web-pro')
+      const font = new FontFaceObserver('arek')
       font.load().then(
         font => {
           this.items.forEach(item => {
@@ -131,7 +133,13 @@ class Menu extends React.Component {
   }
 
   render() {
-    return null
+    return (
+      <Consumer>
+        {({ ...context }) => {
+          this.context = context
+        }}
+      </Consumer>
+    )
   }
 
   setup = () => {
@@ -219,8 +227,15 @@ class Menu extends React.Component {
     )
   }
 
-  navigate = link => () => {
-    navigate(link)
+  navigate = to => () => {
+    navigate({
+      to,
+      exit: {
+        trigger: ({ exit, node }) => console.log(exit, node),
+        length: 1
+      },
+      context: this.context
+    })
   }
 
   handleMouseover = e => {
@@ -304,22 +319,26 @@ class Menu extends React.Component {
       // Animations
       if (this.isCurrent(index)) {
         text.buttonMode = false
-        const tl = new TimelineLite({ delay: 0.5 }) // Wait the prev current item
+        const tl = new TimelineLite({ delay: 0.2 }) // Wait the prev current item
         tl.to(text.position, 0.5, {
-          y: this.middlePosition
+          y: this.middlePosition,
+          ease: Power3.easeIn
         })
           .to(text.style, 0.5, {
-            fontSize: this.fontSize * this.fontSizeMoltiplicator
+            fontSize: this.fontSize * this.fontSizeMoltiplicator,
+            ease: Power3.easeOut
           })
           .add(
-            TweenLite.to(text.position, 0.5, {
-              x: this.leftMiddlePosition
+            TweenLite.to(text.position, 1, {
+              x: this.leftMiddlePosition,
+              ease: Power3.easeInOut
             }),
-            0.5
+            0.1
           )
           .add(
             TweenLite.to(text, 0.5, {
-              alpha: this.middleAlpha
+              alpha: this.middleAlpha,
+              ease: Power3.easeOut
             }),
             0.5
           )
@@ -330,23 +349,25 @@ class Menu extends React.Component {
           const tl = new TimelineLite()
           tl.to(text.position, 0.5, {
             x: this.leftPosition,
-            ease: Power3.easeInOut
+            ease: Power3.easeIn
           })
             .add(
               TweenLite.to(text.style, 0.5, {
                 fontSize: this.fontSize,
-                ease: Power3.easeInOut
+                ease: Power3.easeIn
               }),
               0
             )
             .add(
               TweenLite.to(text, 0.5, {
-                alpha: 1
+                alpha: 1,
+                ease: Power3.easeIn
               }),
               0
             )
             .to(text.position, 0.5, {
-              y: this.bottomPosition
+              y: this.bottomPosition,
+              ease: Power3.easeOut
             })
         } else {
           const tl = new TimelineLite()
@@ -365,23 +386,27 @@ class Menu extends React.Component {
         // era il current?
         if (this.isCurrent(index, prevIndex)) {
           const tl = new TimelineLite()
-          tl.to(text.position, 0.05, {
-            x: this.leftPosition
+          tl.to(text.position, 0.5, {
+            x: this.leftPosition,
+            ease: Power3.easeIn
           })
             .add(
               TweenLite.to(text.style, 0.5, {
-                fontSize: this.fontSize
+                fontSize: this.fontSize,
+                ease: Power3.easeIn
               }),
               0
             )
             .add(
               TweenLite.to(text, 0.5, {
-                alpha: 1
+                alpha: 1,
+                ease: Power3.easeIn
               }),
               0
             )
             .to(text.position, 0.5, {
-              y: this.topPosition
+              y: this.topPosition,
+              ease: Power3.easeOut
             })
         } else {
           const tl = new TimelineLite()

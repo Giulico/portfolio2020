@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import { connect } from 'redhooks'
 import {
   Container,
@@ -14,7 +15,8 @@ import {
 // Imgs
 import Giulio from '../../assets/images/giulio.png'
 import GiulioMap from '../../assets/images/giulio-map.png'
-import VideoShader from './VideoShader'
+import ShaderHandler from './ShaderHandler'
+import { TweenLite } from 'gsap'
 
 class DisplacedBackground extends React.Component {
   componentDidMount() {
@@ -27,12 +29,28 @@ class DisplacedBackground extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { app: prevApp, canvas: prevCanvas } = prevProps
-    const { app: currApp, canvas: currCanvas } = this.props
+    const {
+      app: prevApp,
+      canvas: prevCanvas,
+      transitionStatus: prevTransitionStatus
+    } = prevProps
+    const {
+      app: currApp,
+      canvas: currCanvas,
+      transitionStatus: currTransitionStatus
+    } = this.props
 
     // When application has been published
     if (!prevCanvas.application && currCanvas.application) {
       this.load()
+    }
+
+    // Leave animation
+    if (
+      prevTransitionStatus !== currTransitionStatus &&
+      currTransitionStatus === 'exiting'
+    ) {
+      this.exit()
     }
 
     // Debounced events
@@ -50,15 +68,25 @@ class DisplacedBackground extends React.Component {
     }, 300)
   }
 
+  componentWillUnmount() {
+    console.log('DisplacedBackground will unmount')
+  }
+
   render() {
     return null
   }
 
   load = () => {
-    new Loader()
-      .add('image', Giulio)
-      .add('depthMap', GiulioMap)
-      .load(this.setup)
+    const image = 'DisplacedBackgroundImage'
+    const map = 'DisplacedBackgroundMap'
+    if (Loader.shared.resources[image]) {
+      this.setup()
+    } else {
+      Loader.shared
+        .add(image, Giulio)
+        .add(map, GiulioMap)
+        .load(this.setup)
+    }
   }
 
   setup = () => {
@@ -68,12 +96,12 @@ class DisplacedBackground extends React.Component {
     this.ds = new Sprite(Texture.from(GiulioMap))
     this.bg = new Sprite(Texture.from(Giulio))
 
-    const stage = new Container()
-    stage.interactive = true
-    stage.zIndex = depth.displacedBackground
-    stage.alpha = 0.5
+    this.stage = new Container()
+    this.stage.interactive = true
+    this.stage.zIndex = depth.displacedBackground
+    this.stage.alpha = 0.5
 
-    canvas.application.stage.addChild(stage)
+    canvas.application.stage.addChild(this.stage)
 
     this.coloredBG = new Graphics()
       .beginFill(0x8bc5ff, 1)
@@ -82,7 +110,7 @@ class DisplacedBackground extends React.Component {
 
     const container = new Container()
 
-    stage.addChild(container, this.ds)
+    this.stage.addChild(container, this.ds)
 
     const displacementFilter = new filters.DisplacementFilter(this.ds)
 
@@ -91,8 +119,8 @@ class DisplacedBackground extends React.Component {
     displacementFilter.scale.x = 10
     displacementFilter.scale.y = 10
 
-    this.VideoShader = new VideoShader(
-      stage,
+    this.ShaderHandler = new ShaderHandler(
+      this.stage,
       canvas.application.view,
       width,
       height
@@ -110,7 +138,7 @@ class DisplacedBackground extends React.Component {
       displacementFilter.scale.y = mouseOffsetY * 20
     }
 
-    stage.on('mousemove', onPointerMove).on('touchmove', onPointerMove)
+    this.stage.on('mousemove', onPointerMove).on('touchmove', onPointerMove)
   }
 
   handleResize = () => {
@@ -169,11 +197,27 @@ class DisplacedBackground extends React.Component {
     this.bg.scale = new Point(scale, scale)
     this.bg.position = pos
   }
+
+  exit() {
+    const { canvas } = this.props
+    TweenLite.to(this.stage, 0.5, {
+      alpha: 0,
+      onComplete: () => {
+        canvas.application.stage.removeChild(this.stage)
+      }
+    })
+  }
 }
 
-const mapStateToProp = state => ({
-  app: state.app,
-  canvas: state.canvas
-})
+DisplacedBackground.propTypes = {
+  transitionStatus: PropTypes.string
+}
+
+const mapStateToProp = state => {
+  return {
+    app: state.app,
+    canvas: state.canvas
+  }
+}
 
 export default connect(mapStateToProp)(DisplacedBackground)

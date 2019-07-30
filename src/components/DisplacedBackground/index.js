@@ -6,6 +6,6 @@ const ClientDisplacedBackground = loadable(() =>
   import('./DisplacedBackground')
 )
 
-const DisplacedBackground = () => <ClientDisplacedBackground />
+const DisplacedBackground = props => <ClientDisplacedBackground {...props} />
 
 export default DisplacedBackground

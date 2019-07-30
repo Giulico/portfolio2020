@@ -1,10 +1,5 @@
 import React from 'react'
 
-const ResumePage = () => (
-  <div>
-    <h1>Resume</h1>
-    <p>What a great resume!</p>
-  </div>
-)
+const ResumePage = () => <span>Resume page</span>
 
 export default ResumePage

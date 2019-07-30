@@ -18,7 +18,8 @@ module.exports = {
   Circle: PIXI.Circle,
   depth: {
     displacedBackground: 1,
-    menu: 10
+    menu: 10,
+    cursor: 20
   },
   // Env
   DEFAULT_LANGUAGE: 'it',

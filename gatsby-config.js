@@ -21,6 +21,12 @@ module.exports = {
   },
   plugins: [
     'gatsby-plugin-react-helmet',
+    {
+      resolve: 'gatsby-plugin-transition-link',
+      options: {
+        layout: require.resolve(`./src/components/Layout`)
+      }
+    },
     'gatsby-plugin-glslify',
     {
       resolve: 'gatsby-plugin-postcss',
@@ -83,12 +89,6 @@ module.exports = {
             }
           }
         ]
-      }
-    },
-    {
-      resolve: `gatsby-plugin-layout`,
-      options: {
-        component: require.resolve(`./src/components/Layout`)
       }
     }
     // {

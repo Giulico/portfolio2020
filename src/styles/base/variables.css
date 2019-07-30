@@ -12,11 +12,11 @@
 
   /* TYPOGRAPHY */
   --font-size-base: 16px;
-  --font-family-base: futura-pt, sans-serif;
+  --font-family-base: freight-sans-pro, sans-serif;
   --font-weight-base: 400;
   --font-weight-base-heavy: 700;
-  --font-family-heading: ff-meta-serif-web-pro, sans-serif;
-  --font-weight-heading: 300;
+  --font-family-heading: arek, sans-serif;
+  --font-weight-heading: 400;
 
   /* DEPTH */
   --z-index-menu: 100;

@@ -6,12 +6,12 @@ import { TweenLite, Expo } from 'gsap'
 import aqVert from './shaders/aq.vert'
 import aqFrag from './shaders/aq.frag'
 
-export default class VideoShader {
+export default class ShaderHandler {
   constructor(container, canvas, videoW, videoH) {
     this.time = 0
     this.saturation = 0.1
     this.displacement = 0.002
-    this.amount = 0.2
+    this.amount = 0.3
     this.mousePos = { x: 0, y: 0 }
     this.oldMousePos = { x: 0, y: 0 }
     this.mouseVelocity = 0
