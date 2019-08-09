@@ -32,17 +32,24 @@ class DisplacedBackground extends React.Component {
     const {
       app: prevApp,
       canvas: prevCanvas,
+      menu: prevMenu,
       transitionStatus: prevTransitionStatus
     } = prevProps
     const {
       app: currApp,
       canvas: currCanvas,
+      menu: currMenu,
       transitionStatus: currTransitionStatus
     } = this.props
 
     // When application has been published
     if (!prevCanvas.application && currCanvas.application) {
       this.load()
+    }
+
+    // Menu open animation
+    if (prevMenu !== currMenu) {
+      this.ShaderHandler[currMenu.isOpen ? 'disappear' : 'appear']()
     }
 
     // Leave animation
@@ -99,7 +106,7 @@ class DisplacedBackground extends React.Component {
     this.stage = new Container()
     this.stage.interactive = true
     this.stage.zIndex = depth.displacedBackground
-    this.stage.alpha = 0.5
+    this.stage.alpha = 0
 
     canvas.application.stage.addChild(this.stage)
 
@@ -139,6 +146,11 @@ class DisplacedBackground extends React.Component {
     }
 
     this.stage.on('mousemove', onPointerMove).on('touchmove', onPointerMove)
+
+    // Enter animation
+    TweenLite.to(this.stage, 1, {
+      alpha: 0.5
+    })
   }
 
   handleResize = () => {
@@ -216,7 +228,8 @@ DisplacedBackground.propTypes = {
 const mapStateToProp = state => {
   return {
     app: state.app,
-    canvas: state.canvas
+    canvas: state.canvas,
+    menu: state.menu
   }
 }
 

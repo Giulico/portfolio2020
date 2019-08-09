@@ -2,6 +2,16 @@ import React from 'react'
 import { connect } from 'redhooks'
 
 class App extends React.Component {
+  componentWillMount() {
+    const { dispatch, mq } = this.props
+    dispatch({
+      type: 'APP_SET_SIZE',
+      payload: {
+        ...mq
+      }
+    })
+  }
+
   componentDidMount() {
     // add event listener resize
     window.addEventListener('resize', this.setSize, false)
@@ -18,11 +28,13 @@ class App extends React.Component {
 
   setSize = e => {
     const target = e.currentTarget
-    this.props.dispatch({
+    const { dispatch, mq } = this.props
+    dispatch({
       type: 'APP_SET_SIZE',
       payload: {
         width: target.innerWidth,
-        height: target.innerHeight
+        height: target.innerHeight,
+        ...mq
       }
     })
   }

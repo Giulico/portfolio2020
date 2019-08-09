@@ -1,12 +1,18 @@
 .header {
   position: fixed;
-  top: 30%;
+  top: 20%;
   left: 10%;
   z-index: 10;
   display: flex;
+  flex-direction: column;
   width: 25%;
   min-width: 250px;
   transform: translateY(-75%);
+
+  @media (--desktop) {
+    top: 28%;
+    flex-direction: row;
+  }
 }
 
 .brand {
@@ -25,11 +31,14 @@
 
 .hr {
   opacity: 0.5;
-  width: 75%;
+  width: 35%;
   border: 0;
   border-bottom: 1px solid var(--gray);
   transform-origin: 0% 50%;
   transition: transform 0.7s var(--power3-ease-out);
+  @media (--desktop) {
+    width: 75%;
+  }
 }
 
 .menuOpen {

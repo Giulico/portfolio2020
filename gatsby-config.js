@@ -32,7 +32,9 @@ module.exports = {
       resolve: 'gatsby-plugin-postcss',
       options: {
         postCssPlugins: [
+          require('postcss-responsive-type'),
           require('postcss-for'),
+          require('postcss-random'),
           require('postcss-preset-env')({
             stage: 0,
             features: {

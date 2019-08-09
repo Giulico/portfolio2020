@@ -4,6 +4,6 @@ import loadable from '@loadable/component'
 
 const ClientFrame = loadable(() => import('./Frame'))
 
-const Frame = () => <ClientFrame />
+const Frame = props => <ClientFrame {...props} />
 
 export default Frame

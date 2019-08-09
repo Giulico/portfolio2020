@@ -4,6 +4,7 @@
   "rules": {
     "at-rule-no-unknown": null,
     "block-no-empty": null,
+    "property-no-unknown": [true, { "ignoreProperties": ["/font-range/"] }],
     "unit-whitelist": ["rem", "%", "px", "vh", "vw", "s", "deg"],
     "order/properties-order": [
       {
@@ -114,6 +115,7 @@
           "font",
           "font-family",
           "font-size",
+          "font-range",
           "font-weight",
           "font-style",
           "font-variant",

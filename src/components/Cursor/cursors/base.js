@@ -7,13 +7,13 @@ const base = ({ position, circlePosition, pointer, circle }) => {
   const newCirclePosition = {
     x: lerp(circleX, x, 0.1),
     y: lerp(circleY, y, 0.1),
-    size: lerp(circleSize, 20, 0.1)
+    size: lerp(circleSize, 15, 0.1)
   }
 
   pointer
     .clear()
     .beginFill(0x000000, 1)
-    .drawCircle(x, y, 3)
+    .drawCircle(x, y, 2)
     .endFill()
 
   circle

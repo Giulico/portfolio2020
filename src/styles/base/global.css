@@ -22,15 +22,7 @@ h4 {
 }
 
 h1 {
-  font-size: 30px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-
-  @media (--tablet) {
-    font-size: 60px;
-  }
-
-  @media (--desktop) {
-    font-size: 90px;
-  }
+  margin: 0.5rem 0 1rem;
+  font-size: responsive 30px 110px; /* min-size, max-size */
+  font-range: 420px 1280px; /* viewport widths between which font-size is fluid */
 }

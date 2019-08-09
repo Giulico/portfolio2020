@@ -1,11 +1,11 @@
 import React from 'react'
 import { connect } from 'redhooks'
 import { Container, Graphics, depth } from '../../constants'
+import { isEqual } from 'lodash'
 
 class Frame extends React.Component {
   componentDidMount() {
     const { canvas } = this.props
-
     // if application was already published
     if (canvas.application) {
       this.setup()
@@ -27,10 +27,7 @@ class Frame extends React.Component {
     }
     this.debounceTimer = window.setTimeout(() => {
       // If App Resize
-      if (
-        currApp.width !== prevApp.width ||
-        currApp.height !== prevApp.height
-      ) {
+      if (!isEqual(prevApp, currApp)) {
         this.handleResize()
       }
     }, 300)
@@ -38,6 +35,10 @@ class Frame extends React.Component {
 
   render() {
     return null
+  }
+
+  get frameSize() {
+    return this.props.app.isTabletOrMobileDevice ? 20 : 40
   }
 
   setup() {
@@ -58,26 +59,28 @@ class Frame extends React.Component {
   drawFrame() {
     const { app } = this.props
     const { width, height } = app
+    // const color = 0x9c27b0
+    const color = 0xffffff
 
     this.topBar
       .clear()
-      .beginFill(0xffffff, 1)
-      .drawRect(0, 0, width, 40)
+      .beginFill(color, 1)
+      .drawRect(0, 0, width, this.frameSize)
       .endFill()
     this.rightBar
       .clear()
-      .beginFill(0xffffff, 1)
-      .drawRect(width - 40, 0, 40, height)
+      .beginFill(color, 1)
+      .drawRect(width - this.frameSize, 0, this.frameSize, height)
       .endFill()
     this.bottomBar
       .clear()
-      .beginFill(0xffffff, 1)
-      .drawRect(0, height - 40, width, 40)
+      .beginFill(color, 1)
+      .drawRect(0, height - this.frameSize, width, this.frameSize)
       .endFill()
     this.leftBar
       .clear()
-      .beginFill(0xffffff, 1)
-      .drawRect(0, 0, 40, height)
+      .beginFill(color, 1)
+      .drawRect(0, 0, this.frameSize, height)
       .endFill()
   }
 

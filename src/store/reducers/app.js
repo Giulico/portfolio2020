@@ -1,7 +1,13 @@
 const getSize = () => ({
   width: typeof window === 'undefined' ? 800 : window.innerWidth,
-  height: typeof window === 'undefined' ? 600 : window.innerHeight
+  height: typeof window === 'undefined' ? 600 : window.innerHeight,
+  isDesktopOrLaptop: true,
+  isBigScreen: false,
+  isTabletOrMobile: false,
+  isTabletOrMobileDevice: false,
+  isPortrait: false
 })
+
 const defaultState = {
   ...getSize()
 }
@@ -10,11 +16,9 @@ const defaultState = {
 const app = (state = defaultState, { type, payload }) => {
   switch (type) {
     case 'APP_SET_SIZE':
-      const { width, height } = payload
       return {
         ...state,
-        width,
-        height
+        ...payload
       }
     default:
       return state

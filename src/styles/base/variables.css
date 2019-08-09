@@ -37,3 +37,9 @@
   --burger-ease: cubic-bezier(0.54, -0.81, 0.57, 0.57);
   --burger-color: #ffffff;
 }
+
+:export {
+  --laptop: 992px;
+  --desktop: 1224;
+  --bigScreen: 1824px;
+}

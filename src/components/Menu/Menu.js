@@ -1,39 +1,33 @@
 import React from 'react'
 import { connect } from 'redhooks'
-import { TweenLite, TimelineLite, Power3 } from 'gsap'
+import { TweenLite, TimelineLite, Power3, Power4 } from 'gsap'
 import FontFaceObserver from 'fontfaceobserver'
 import { Container, Ticker, Text, Graphics, depth } from '../../constants'
 import { Consumer } from 'gatsby-plugin-transition-link/context/createTransitionContext'
 
 // Utils
 import { navigate } from '../../utils/page-transition'
+import { proximityFactor } from '../../utils/numbers'
 
 class Menu extends React.Component {
   state = {
     isAnimating: false
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     const { canvas, menuLinks } = this.props
 
     // if application was already published
     if (canvas.application) {
       this.items = Array.from(menuLinks, v => ({}))
       this.currIndex = this.findCurrentIndex()
-      this.setup()
-      // load font family
-      const font = new FontFaceObserver('arek')
-      font.load().then(
-        font => {
-          this.items.forEach(item => {
-            item.text.style.fontFamily = font.family
-          })
-        },
-        () => {
-          console.log('Font is not available')
-        }
-      )
+      this.setupItems()
+      await this.loadFont()
+      this.updateItemsRect()
     }
+
+    // Hover effect
+    window.addEventListener('mousemove', this.handleMouseMove, false)
   }
 
   componentDidUpdate(prevProps) {
@@ -52,7 +46,7 @@ class Menu extends React.Component {
 
     // When application has been published
     if (!prevCanvas.application && currCanvas.application) {
-      this.setup()
+      this.setupItems()
     }
 
     // Route changed
@@ -98,15 +92,23 @@ class Menu extends React.Component {
     y: this.middlePosition - this.fontSize / 2
   }
 
-  fontSizeMoltiplicator = 1.75
+  prevItemRect = {}
 
-  get fontSize() {
-    return Math.round(window.innerHeight / 7)
-  }
+  nextItemRect = {}
 
   middleAlpha = 0.3
 
   topPosition = 0
+
+  fontSizeMoltiplicator = 1.75
+
+  get fontSize() {
+    const { app } = this.props
+    const { isTabletOrMobile, isPortrait } = app
+    return isTabletOrMobile && isPortrait
+      ? Math.round(window.innerWidth / 6)
+      : Math.round(window.innerHeight / 7)
+  }
 
   get middlePosition() {
     const { app } = this.props
@@ -122,14 +124,14 @@ class Menu extends React.Component {
 
   get leftPosition() {
     const { app } = this.props
-    const { width } = app
-    return width / 2
+    const { width, isTabletOrMobile, isPortrait } = app
+    return isTabletOrMobile && isPortrait ? width / 3 : width / 2
   }
 
   get leftMiddlePosition() {
     const { app } = this.props
-    const { width } = app
-    return width / 1.4
+    const { width, isTabletOrMobile, isPortrait } = app
+    return isTabletOrMobile && isPortrait ? width / 2 : width / 1.4
   }
 
   render() {
@@ -142,7 +144,7 @@ class Menu extends React.Component {
     )
   }
 
-  setup = () => {
+  setupItems = () => {
     const { canvas, menuLinks } = this.props
 
     // Create the container and add the Text
@@ -161,6 +163,21 @@ class Menu extends React.Component {
     this.ticker.add(this.drawIndicators)
   }
 
+  loadFont() {
+    // load font family
+    const font = new FontFaceObserver('arek')
+    return font.load().then(
+      font => {
+        this.items.forEach(item => {
+          item.text.style.fontFamily = font.family
+        })
+      },
+      () => {
+        console.log('Font is not available')
+      }
+    )
+  }
+
   findCurrentIndex() {
     const { menuLinks, location } = this.props
     return menuLinks.findIndex(item => item.link === location.pathname)
@@ -169,7 +186,6 @@ class Menu extends React.Component {
   addText(menuLink, index) {
     const { app } = this.props
     const { width, height } = app
-    const isCurrent = this.isCurrent(index)
 
     this.items[index].text = new Text(menuLink.name, {
       fontFamily: 'Arial',
@@ -196,7 +212,7 @@ class Menu extends React.Component {
 
     text.anchor.set(0, 0.5)
     text.interactive = true
-    text.buttonMode = !isCurrent
+    text.buttonMode = false
 
     // Initial position
     this.setTextPosition(text, index)
@@ -205,8 +221,8 @@ class Menu extends React.Component {
 
     // Events
     text.on('click', this.navigate(menuLink.link))
-    text.on('mouseover', this.handleMouseover)
-    text.on('mouseout', this.handleMouseout)
+    // text.on('mouseover', this.handleMouseover)
+    // text.on('mouseout', this.handleMouseout)
   }
 
   isCurrent = (index, currIndex = this.currIndex) => currIndex === index
@@ -238,61 +254,61 @@ class Menu extends React.Component {
     })
   }
 
-  handleMouseover = e => {
-    if (this.state.isAnimating) {
-      return
-    }
-    const { menuLinks } = this.props
-    const target = e.currentTarget
-    const index = menuLinks.findIndex(item => item.name === target.text)
-    if (this.isNext(index)) {
-      this.mouseoverBottomAnimation(target)
-    } else if (this.isPrev(index)) {
-      this.mouseoverTopAnimation(target)
-    }
-  }
+  // handleMouseover = e => {
+  //   if (this.state.isAnimating) {
+  //     return
+  //   }
+  //   const { menuLinks } = this.props
+  //   const target = e.currentTarget
+  //   const index = menuLinks.findIndex(item => item.name === target.text)
+  //   if (this.isNext(index)) {
+  //     this.mouseoverBottomAnimation(target)
+  //   } else if (this.isPrev(index)) {
+  //     this.mouseoverTopAnimation(target)
+  //   }
+  // }
 
-  handleMouseout = e => {
-    if (this.state.isAnimating) {
-      return
-    }
-    const { menuLinks } = this.props
-    const target = e.currentTarget
-    const index = menuLinks.findIndex(item => item.name === target.text)
-    if (this.isNext(index)) {
-      this.mouseoutBottomAnimation(target)
-    } else if (this.isPrev(index)) {
-      this.mouseoutTopAnimation(target)
-    }
-  }
+  // handleMouseout = e => {
+  //   if (this.state.isAnimating) {
+  //     return
+  //   }
+  //   const { menuLinks } = this.props
+  //   const target = e.currentTarget
+  //   const index = menuLinks.findIndex(item => item.name === target.text)
+  //   if (this.isNext(index)) {
+  //     this.mouseoutBottomAnimation(target)
+  //   } else if (this.isPrev(index)) {
+  //     this.mouseoutTopAnimation(target)
+  //   }
+  // }
 
-  mouseoverBottomAnimation = target => {
-    TweenLite.to(target, 0.5, {
-      y: this.bottomPosition - this.fontSize / 2,
-      ease: Power3.easeOut
-    })
-  }
+  // mouseoverBottomAnimation = target => {
+  //   TweenLite.to(target, 0.5, {
+  //     y: this.bottomPosition - this.fontSize / 2,
+  //     ease: Power3.easeOut
+  //   })
+  // }
 
-  mouseoutBottomAnimation = target => {
-    TweenLite.to(target, 0.5, {
-      y: this.bottomPosition,
-      ease: Power3.easeOut
-    })
-  }
+  // mouseoutBottomAnimation = target => {
+  //   TweenLite.to(target, 0.5, {
+  //     y: this.bottomPosition,
+  //     ease: Power3.easeOut
+  //   })
+  // }
 
-  mouseoverTopAnimation = target => {
-    TweenLite.to(target, 0.5, {
-      y: this.topPosition + this.fontSize / 2,
-      ease: Power3.easeOut
-    })
-  }
+  // mouseoverTopAnimation = target => {
+  //   TweenLite.to(target, 0.5, {
+  //     y: this.topPosition + this.fontSize / 2,
+  //     ease: Power3.easeOut
+  //   })
+  // }
 
-  mouseoutTopAnimation = target => {
-    TweenLite.to(target, 0.5, {
-      y: this.topPosition,
-      ease: Power3.easeOut
-    })
-  }
+  // mouseoutTopAnimation = target => {
+  //   TweenLite.to(target, 0.5, {
+  //     y: this.topPosition,
+  //     ease: Power3.easeOut
+  //   })
+  // }
 
   changeItemsOrder = () => {
     // Add new event listeners after 1 second
@@ -318,7 +334,6 @@ class Menu extends React.Component {
 
       // Animations
       if (this.isCurrent(index)) {
-        text.buttonMode = false
         const tl = new TimelineLite({ delay: 0.2 }) // Wait the prev current item
         tl.to(text.position, 0.5, {
           y: this.middlePosition,
@@ -343,10 +358,9 @@ class Menu extends React.Component {
             0.5
           )
       } else if (this.isNext(index)) {
-        text.buttonMode = true
         // era il current?
         if (this.isCurrent(index, prevIndex)) {
-          const tl = new TimelineLite()
+          const tl = new TimelineLite({ onComplete: this.updateItemsRect })
           tl.to(text.position, 0.5, {
             x: this.leftPosition,
             ease: Power3.easeIn
@@ -370,7 +384,7 @@ class Menu extends React.Component {
               ease: Power3.easeOut
             })
         } else {
-          const tl = new TimelineLite()
+          const tl = new TimelineLite({ onComplete: this.updateItemsRect })
           tl.to(text.position, 0.5, {
             y: this.fontSize / -2
           })
@@ -382,10 +396,9 @@ class Menu extends React.Component {
             })
         }
       } else if (this.isPrev(index)) {
-        text.buttonMode = true
         // era il current?
         if (this.isCurrent(index, prevIndex)) {
-          const tl = new TimelineLite()
+          const tl = new TimelineLite({ onComplete: this.updateItemsRect })
           tl.to(text.position, 0.5, {
             x: this.leftPosition,
             ease: Power3.easeIn
@@ -409,7 +422,7 @@ class Menu extends React.Component {
               ease: Power3.easeOut
             })
         } else {
-          const tl = new TimelineLite()
+          const tl = new TimelineLite({ onComplete: this.updateItemsRect })
           tl.to(text.position, 0.5, {
             y: this.bottomPosition + this.fontSize / 2
           })
@@ -433,29 +446,34 @@ class Menu extends React.Component {
     // Start drawing the indicators
     this.ticker.start()
     TweenLite.to([this.indicator, this.background], 0.5, {
-      alpha: 1
+      alpha: 1,
+      delay: 0
     })
 
     // Align the menu items
     this.items.forEach((item, index) => {
       const text = item.text
       if (this.isCurrent(index)) {
-        TweenLite.to(text, 0.5, {
+        TweenLite.to(text, 0.7, {
           alpha: 1
         })
-        TweenLite.to(text.position, 0.5, {
-          x: this.leftPosition
+        TweenLite.to(text.position, 0.7, {
+          x: this.leftPosition,
+          ease: Power4.easeOut
         })
-        TweenLite.to(text.style, 0.3, {
-          fontSize: this.fontSize
+        TweenLite.to(text.style, 0.5, {
+          fontSize: this.fontSize,
+          ease: Power4.easeOut
         })
       } else if (this.isPrev(index)) {
-        TweenLite.to(text.position, 0.5, {
-          y: this.middlePosition - this.fontSize
+        TweenLite.to(text.position, 0.7, {
+          y: this.middlePosition - this.fontSize,
+          ease: Power4.easeOut
         })
       } else if (this.isNext(index)) {
-        TweenLite.to(text.position, 0.5, {
-          y: this.middlePosition + this.fontSize
+        TweenLite.to(text.position, 1, {
+          y: this.middlePosition + this.fontSize,
+          ease: Power4.easeOut
         })
       }
     })
@@ -509,27 +527,32 @@ class Menu extends React.Component {
       this.items.forEach((item, index) => {
         const text = item.text
         if (this.isCurrent(index)) {
-          TweenLite.to(text, 0.5, {
-            alpha: this.middleAlpha
+          TweenLite.to(text, 0.7, {
+            alpha: this.middleAlpha,
+            ease: Power4.easeOut
           })
-          TweenLite.to(text.position, 0.5, {
+          TweenLite.to(text.position, 1.2, {
             x: this.leftMiddlePosition,
+            ease: Power4.easeOut,
             onComplete: () => {
               // Stop drawing the indicator
               this.ticker.stop()
               this.setState({ isAnimating: false })
             }
           })
-          TweenLite.to(text.style, 0.5, {
-            fontSize: fontSize * this.fontSizeMoltiplicator
+          TweenLite.to(text.style, 1, {
+            fontSize: fontSize * this.fontSizeMoltiplicator,
+            ease: Power4.easeOut
           })
         } else if (this.isPrev(index)) {
-          TweenLite.to(text.position, 0.5, {
-            y: this.topPosition
+          TweenLite.to(text.position, 0.7, {
+            y: this.topPosition,
+            ease: Power4.easeOut
           })
         } else if (this.isNext(index)) {
-          TweenLite.to(text.position, 0.5, {
-            y: this.bottomPosition
+          TweenLite.to(text.position, 1, {
+            y: this.bottomPosition,
+            ease: Power4.easeOut
           })
         }
       })
@@ -621,6 +644,71 @@ class Menu extends React.Component {
     }
   }
 
+  updateItemsRect = () => {
+    this.items.forEach((item, index) => {
+      const text = item.text
+      if (this.isNext(index)) {
+        this.nextItemRect = {
+          ref: text,
+          x: text.x,
+          y: text.y,
+          width: text.width,
+          height: text.height
+        }
+      }
+      if (this.isPrev(index)) {
+        this.prevItemRect = {
+          ref: text,
+          x: text.x,
+          y: text.y,
+          width: text.width,
+          height: text.height
+        }
+      }
+    })
+  }
+
+  handleMouseMove = e => {
+    const { x, y } = e
+    const { isAnimating } = this.state
+    // hai la posizione del mouse e i rect degli items prev e next
+    // crea una funzione pura che ritorna da 0 a 1 a seconda della vicinanza
+    const prevProximity = proximityFactor({ x, y }, this.prevItemRect)
+    const nextProximity = proximityFactor({ x, y }, this.nextItemRect)
+
+    if (!isAnimating && prevProximity !== 0) {
+      this.isMouseOnPrevItem = true
+      const item = this.prevItemRect.ref
+      TweenLite.to(item, 0.3, {
+        y: (this.fontSize * prevProximity) / 2
+      })
+    }
+    if (!isAnimating && nextProximity !== 0) {
+      const item = this.nextItemRect.ref
+      this.isMouseOnNextItem = true
+      TweenLite.to(item, 0.3, {
+        y: this.bottomPosition - (this.fontSize * nextProximity) / 2
+      })
+    }
+    // Se sei appena uscitom ripristina
+    if (!isAnimating && prevProximity === 0 && this.isMouseOnPrevItem) {
+      this.isMouseOnPrevItem = false
+      const item = this.prevItemRect.ref
+      TweenLite.to(item, 0.7, {
+        y: this.topPosition,
+        ease: Power3.easeOut
+      })
+    }
+    if (!isAnimating && nextProximity === 0 && this.isMouseOnNextItem) {
+      this.isMouseOnNextItem = false
+      const item = this.nextItemRect.ref
+      TweenLite.to(item, 0.7, {
+        y: this.bottomPosition,
+        ease: Power3.easeOut
+      })
+    }
+  }
+
   handlePointerDrag = e => {
     const y = e.y
     const middlePosition = this.middlePosition
@@ -654,6 +742,7 @@ class Menu extends React.Component {
     this.items.forEach((item, index) => {
       const text = item.text
       this.setTextPosition(text, index)
+      this.drawIndicators()
     })
   }
 }

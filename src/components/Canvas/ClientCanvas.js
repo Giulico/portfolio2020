@@ -50,9 +50,8 @@ class Canvas extends PureComponent {
   onResize = () => {
     const { app, canvas } = this.props
     const { width, height } = app
-    const { view } = canvas.application
-    view.width = width
-    view.height = height
+    const { renderer } = canvas.application
+    renderer.resize(width, height)
   }
 }
 

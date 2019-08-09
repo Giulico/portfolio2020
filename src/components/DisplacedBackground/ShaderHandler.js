@@ -3,8 +3,8 @@ import { Filter } from '../../constants'
 import { TweenLite, Expo } from 'gsap'
 
 // Shaders
-import aqVert from './shaders/aq.vert'
-import aqFrag from './shaders/aq.frag'
+import mainVert from './shaders/main.vert'
+import mainFrag from './shaders/main.frag'
 
 export default class ShaderHandler {
   constructor(container, canvas, videoW, videoH) {
@@ -14,7 +14,7 @@ export default class ShaderHandler {
     this.amount = 0.3
     this.mousePos = { x: 0, y: 0 }
     this.oldMousePos = { x: 0, y: 0 }
-    this.mouseVelocity = 0
+    this.mouseVelocity = 300
     this.newVel = 5
     this.videoContainer = container
     this.canvas = canvas
@@ -37,7 +37,7 @@ export default class ShaderHandler {
       u_mouse_vel: { type: 'f', value: 0 }
     }
 
-    this.shader = new Filter(aqVert, aqFrag, this.uniforms)
+    this.shader = new Filter(mainVert, mainFrag, this.uniforms)
     this.shader.autoFit = true
     this.videoContainer.filters = [this.shader]
 
@@ -77,8 +77,16 @@ export default class ShaderHandler {
       })
     })
 
+  disappear = () => {
+    TweenLite.to(this, 0.4, { mouseVelocity: 500, ease: Expo.easeOut })
+  }
+
+  appear = () => {
+    TweenLite.fromTo(this, 1.5, { mouseVelocity: 500 }, { mouseVelocity: 0 })
+  }
+
   displace = () => {
-    TweenLite.to(this, 1, { displacement: 1, ease: Expo.easeIn })
+    TweenLite.to(this, 0.4, { displacement: 1, ease: Expo.easeIn })
   }
 
   normalize = (vel = 1) => {

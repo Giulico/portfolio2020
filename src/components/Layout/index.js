@@ -12,6 +12,7 @@ import store from '../../store'
 
 // Components
 import App from '../App'
+import Mq from '../Mq'
 import Cursor from '../Cursor'
 import Header from '../Header'
 import Canvas from '../Canvas'
@@ -59,10 +60,11 @@ const Layout = ({ children, location, pageContext }) => {
       <Cursor />
       <Canvas />
       <Frame />
+
       <Menu menuLinks={menuLinks} location={location} />
       <Header />
       <main className={style.main}>
-        <App>{children}</App>
+        <Mq>{mq => <App mq={mq}>{children}</App>}</Mq>
       </main>
     </Provider>
   )
