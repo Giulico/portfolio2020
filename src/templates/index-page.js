@@ -11,11 +11,14 @@ import style from './index-page.module.css'
 
 class IndexPage extends React.Component {
   render() {
-    const { transitionStatus, menu } = this.props
+    const { app, transitionStatus, menu } = this.props
+    const { isLoading } = app
 
     const classes = cn({
       [style.root]: true,
-      [style.menuOpen]: menu.isOpen
+      [style.menuOpen]: menu.isOpen,
+      [style.loading]: isLoading === 'loading',
+      [style.loaded]: isLoading === 'loaded'
     })
 
     return (
@@ -51,6 +54,7 @@ class IndexPage extends React.Component {
 IndexPage.propTypes = {}
 
 const mapStateToProps = state => ({
+  app: state.app,
   menu: state.menu
 })
 

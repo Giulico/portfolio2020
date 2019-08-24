@@ -8,6 +8,7 @@ import { Consumer } from 'gatsby-plugin-transition-link/context/createTransition
 // Utils
 import { navigate } from '../../utils/page-transition'
 import { proximityFactor } from '../../utils/numbers'
+import { timer } from '../../utils/async'
 
 class Menu extends React.Component {
   state = {
@@ -213,16 +214,17 @@ class Menu extends React.Component {
     text.anchor.set(0, 0.5)
     text.interactive = true
     text.buttonMode = false
+    text.alpha = 0
+    this.container.addChild(text, indicator)
 
     // Initial position
-    this.setTextPosition(text, index)
-
-    this.container.addChild(text, indicator)
+    // this.setTextPosition(text, index)
+    timer(2500)
+      .then(() => this.moveTextToItsPosition(text, index))
+      .then(() => this.updateItemsRect())
 
     // Events
     text.on('click', this.navigate(menuLink.link))
-    // text.on('mouseover', this.handleMouseover)
-    // text.on('mouseout', this.handleMouseout)
   }
 
   isCurrent = (index, currIndex = this.currIndex) => currIndex === index
@@ -384,7 +386,7 @@ class Menu extends React.Component {
               ease: Power3.easeOut
             })
         } else {
-          const tl = new TimelineLite({ onComplete: this.updateItemsRect })
+          const tl = new TimelineLite({ onComplete: this.updateitemsrect })
           tl.to(text.position, 0.5, {
             y: this.fontSize / -2
           })
@@ -557,51 +559,6 @@ class Menu extends React.Component {
         }
       })
     }
-
-    // if (this.selectedItem === 0) {
-    //   const tlThirdItem = new TimelineLite()
-    //   tlThirdItem
-    //     .to(thirdItem.text, 0.5, {
-    //       y: this.bottomPosition + fontSize
-    //     })
-    //     .set(thirdItem.text, {
-    //       y: this.topPosition - fontSize
-    //     })
-    //     .to(thirdItem.text, 0.5, {
-    //       y: this.topPosition
-    //     })
-    //   TweenLite.to(secondItem.text, 0.5, {
-    //     y: this.bottomPosition,
-    //     delay: 0.1
-    //   })
-    //   const tlFirstItem = new TimelineLite({
-    //     onComplete: () => {
-    //       // const pathname = this.props.menuLinks.find(
-    //       //   menuLink => menuLink.name === firstItem.text.text
-    //       // ).link
-    //       // this.navigate(pathname)()
-    //     }
-    //   })
-    //   tlFirstItem
-    //     .to(firstItem.text, 0.5, {
-    //       y: this.middlePosition,
-    //       delay: 0.2
-    //     })
-    //     .to(firstItem.text, 0.5, {
-    //       alpha: this.middleAlpha,
-    //       x: this.leftMiddlePosition
-    //     })
-    //     .add(
-    //       TweenLite.to(firstItem.text.style, 0.5, {
-    //         fontSize: fontSize * this.fontSizeMoltiplicator
-    //       }),
-    //       0.5
-    //     )
-    // } else if (this.selectedItem === 2) {
-    //   console.log('metti l"ultima in centro')
-    // } else {
-    // Menu items
-    // }
   }
 
   drawIndicators = () => {
@@ -642,6 +599,45 @@ class Menu extends React.Component {
     } else {
       text.visible = false
     }
+  }
+
+  moveTextToItsPosition(text, index) {
+    const { app } = this.props
+    const { width } = app
+    return new Promise(resolve => {
+      if (this.isCurrent(index)) {
+        text.position.set(width, this.middlePosition)
+        text.style.fontSize = this.fontSize * this.fontSizeMoltiplicator
+        TweenLite.to(text.position, 1.5, {
+          x: this.leftMiddlePosition,
+          onComplete: resolve
+        })
+        TweenLite.to(text, 1.5, {
+          alpha: this.middleAlpha
+        })
+      } else if (this.isNext(index)) {
+        text.position.set(
+          this.leftPosition,
+          this.bottomPosition + text.height / 2
+        )
+        TweenLite.to(text.position, 1.5, {
+          y: this.bottomPosition
+        })
+        TweenLite.to(text, 1.5, {
+          alpha: 1
+        })
+      } else if (this.isPrev(index)) {
+        text.position.set(this.leftPosition, this.topPosition - text.height / 2)
+        TweenLite.to(text.position, 1.5, {
+          y: this.topPosition
+        })
+        TweenLite.to(text, 1.5, {
+          alpha: 1
+        })
+      } else {
+        text.visible = false
+      }
+    })
   }
 
   updateItemsRect = () => {

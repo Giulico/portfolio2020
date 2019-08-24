@@ -10,10 +10,12 @@ import MenuBurger from '../MenuBurger'
 
 const Header = () => {
   const { state } = useStore()
-  const { menu } = state
+  const { app, menu } = state
+  const { isLoading } = app
 
   const classes = cn({
-    [style.header]: true,
+    [style.root]: true,
+    [style.loaded]: isLoading === 'loaded',
     [style.menuOpen]: menu.isOpen
   })
 

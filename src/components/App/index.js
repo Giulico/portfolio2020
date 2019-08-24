@@ -1,6 +1,9 @@
 import React from 'react'
 import { connect } from 'redhooks'
 
+// Utilities
+import { timer } from '../../utils/async'
+
 class App extends React.Component {
   componentWillMount() {
     const { dispatch, mq } = this.props
@@ -13,6 +16,18 @@ class App extends React.Component {
   }
 
   componentDidMount() {
+    const { dispatch } = this.props
+
+    // Loading simulator
+    timer(1000)
+      .then(() => {
+        dispatch({ type: 'APP_SET_LOADING', payload: { isLoading: 'loading' } })
+        return timer(1000)
+      })
+      .then(() => {
+        dispatch({ type: 'APP_SET_LOADING', payload: { isLoading: 'loaded' } })
+      })
+
     // add event listener resize
     window.addEventListener('resize', this.setSize, false)
   }

@@ -21,10 +21,12 @@ class MenuBurger extends React.Component {
   }
 
   render() {
-    const { menu, cursor } = this.props
+    const { app, menu, cursor } = this.props
+    const { isLoading } = app
 
     const classes = cn({
       [style.root]: true,
+      [style.loaded]: isLoading === 'loaded',
       [style.hasHover]:
         cursor.name === 'menuBurger' || cursor.name === 'menuOpen',
       [style.isOpen]: menu.isOpen
@@ -135,6 +137,7 @@ class MenuBurger extends React.Component {
 }
 
 const mapStateToProp = state => ({
+  app: state.app,
   menu: state.menu,
   cursor: state.cursor
 })

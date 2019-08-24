@@ -149,7 +149,8 @@ class DisplacedBackground extends React.Component {
 
     // Enter animation
     TweenLite.to(this.stage, 1, {
-      alpha: 0.5
+      alpha: 0.5,
+      delay: 2.5
     })
   }
 
